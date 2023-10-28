@@ -1,7 +1,7 @@
 from os import terminal_size
 from pickle import TRUE
 from token import ISTERMINAL
-from turtle import color
+from turtle import color, pos
 from tools import *
 import random
 
@@ -77,7 +77,11 @@ class SearchEngine():
 
 
     def minimax(self,board, depth, alpha, beta, maximizingPlayer, positions):
-              
+        if depth==Defines.DEPTH:
+            tamanito=Defines.TAMANO
+        else:
+            tamanito=2
+            
         is_terminal =  is_win_by_premove(board, positions)
         if depth == 0 or is_terminal:
             if is_terminal:
@@ -91,15 +95,19 @@ class SearchEngine():
                 #     return (None, 0)
             else: # Depth is
                 #return (None, score_position(board, AI_PIECE)) #Comentado por ahora la llamada a un metodo, voy a probar con numeros random primero    
-                return (None,random.uniform(1, 300))
+                # return (None,random.uniform(1, 300))
+                if maximizingPlayer:
+                    return (None,hmove_evaluation(board,self.m_chess_type,positions[0],positions[1])+hmove_evaluation(board,self.m_chess_type,positions[2],positions[3]))
+                else:
+                     return (None,hmove_evaluation(board,self.m_chess_type^3,positions[0],positions[1])+hmove_evaluation(board,self.m_chess_type^3,positions[2].positions[3]))                   
         else:   #Antes lo tenia arriba, pero si esto para evaluar, pa que evaluar posibles posiciones 
             if len(positions)==2:
-                valid_locations = get_valid_locations(board,Defines.TAMANO,positions)
+                valid_locations = get_valid_locations(board,tamanito,positions)
             else:
-                valid_locations =  posiciones_disponibles_sin_repetidos(board,Defines.TAMANO,positions[:2],positions[2:])
+                valid_locations =  posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
         
            # Este print es para mostrar las posibles jugadas que harian mindy y maximiliano
-            # print_board_2(board, valid_locations) 
+        #print_board_2(board, valid_locations) 
 
         if maximizingPlayer:
             value = Defines.MININT

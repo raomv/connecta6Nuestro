@@ -254,3 +254,32 @@ def print_board_2(board, casillas):
 # Metodo de colocacion de fichas pero trabajando con numpy
 def make_move_2(board, move, color):
     board[move[0]][move[1]] = color
+    
+#Prueba de la evaluación del paper del felixiano.. 
+def hmove_evaluation(board, player, row, col):
+    E = 0
+    epsilon = 0.5  # Valor ?
+    weights = [0, 1, 2, 3, 4, 5]  # Valores w1, w2, w3, w4, w5
+
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+
+    for direction in directions:
+        Edirectional = 1
+        for half in range(2):
+            for k in range(1, 6):
+                r = row + direction[0] * k
+                c = col + direction[1] * k
+
+                if not (0 <= r < len(board) and 0 <= c < len(board[0])):
+                    break
+
+                if board[r][c] == 3 - player:  # Oponente's stone or border
+                    break
+                elif board[r][c] == 0:  # Empty point
+                    Edirectional *= epsilon
+                elif board[r][c] == player:  # Own stone
+                    Edirectional *= weights[k]
+
+            E += Edirectional
+
+    return E
