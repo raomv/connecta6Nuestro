@@ -82,8 +82,10 @@ class SearchEngine():
         if depth == 0 or is_terminal:
             if is_terminal:
                 if maximizingPlayer:
+                    print_board(board)
                     return (None,Defines.MININT)
                 else:
+                    print_board(board)
                     return (None,Defines.MAXINT)
                 # else: # Game is over, no more valid moves
                 #     return (None, 0)
@@ -120,6 +122,8 @@ class SearchEngine():
 
                         if alpha >= beta:
                             break
+                if alpha >= beta:
+                    break
 
             return best_move, value
         else:  # Minimizing player
@@ -141,7 +145,8 @@ class SearchEngine():
 
                         if alpha <= beta:
                             break
-
+                if alpha <= beta:
+                    break
             return best_move, value
 
 

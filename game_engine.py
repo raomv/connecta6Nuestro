@@ -60,15 +60,17 @@ class GameEngine:
                 self.m_best_move = msg2move(msg[6:])
                 make_move(self.m_board, self.m_best_move, Defines.BLACK)
                 self.m_chess_type = Defines.BLACK
+                Defines.LVMOVE = [self.m_best_move.positions[0].x,self.m_best_move.positions[0].y, self.m_best_move.positions[1].x,self.m_best_move.positions[1].y]
             elif msg.startswith("white"):
                 self.m_best_move = msg2move(msg[6:])
                 make_move(self.m_board, self.m_best_move, Defines.WHITE)
                 self.m_chess_type = Defines.WHITE
+                Defines.LVMOVE = [self.m_best_move.positions[0].x,self.m_best_move.positions[0].y, self.m_best_move.positions[1].x,self.m_best_move.positions[1].y]
             elif msg == "next":
                 self.m_chess_type = self.m_chess_type ^ 3
                 if self.search_a_move(self.m_chess_type, self.m_best_move):
                     make_move(self.m_board, self.m_best_move, self.m_chess_type)
-                    msg = f"move {move2msg(self.m_best_move)}" 
+                    msg = f"move {move2msg(self.m_best_move)} "+f" color: {self.m_chess_type}" 
                     print(msg)
                     flush_output()
             elif msg.startswith("new"):
@@ -81,12 +83,19 @@ class GameEngine:
                     print(msg)
                     flush_output()
                 else:
+                    self.m_best_move = msg2move("JJ")
+                    make_move(self.m_board, self.m_best_move, Defines.WHITE)
                     self.m_chess_type = Defines.WHITE
+                    msg = "move JJ"
+                    print(msg)
+                    flush_output()
             elif msg.startswith("move"):
                 self.m_best_move = msg2move(msg[5:])
                 make_move(self.m_board, self.m_best_move, self.m_chess_type ^ 3)
-                if is_win_by_premove(self.m_board, self.m_best_move):
+                if is_win_by_premove(self.m_board, Defines.LVMOVE):
                     print("We lost!")
+                    print_board(self.m_board)
+                    break
                 if self.search_a_move(self.m_chess_type, self.m_best_move):
                     msg = f"move {move2msg(self.m_best_move)}"
                     make_move(self.m_board, self.m_best_move, self.m_chess_type)
