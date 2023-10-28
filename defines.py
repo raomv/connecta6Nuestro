@@ -13,8 +13,8 @@ class Defines:
     # Max values in the evaluation.
     MAXINT=20000
     MININT=-20000
-    TAMANO = 3        #Tamaño de la ventana cuadrada de evaluacion para posicionar la ficha
-    DEPTH = 2         #Profundidad de busqueda
+    TAMANO = 2        #Tamaño de la ventana cuadrada de evaluacion para posicionar la ficha
+    DEPTH = 2        #Profundidad de busqueda
     LVMOVE = []        #Last Valid Move, almacena el ultimo movimiento valido
         
 

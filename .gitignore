@@ -3,3 +3,4 @@
 /dist/main
 /__pycache__
 /main.spec
+*.log

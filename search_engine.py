@@ -75,22 +75,18 @@ class SearchEngine():
                     return (i,j)
         return (-1,-1)
 
-    #TBD
-    def is_terminal_node(self):
-        return winning_move(board, PLAYER_PIECE) or winning_move(board, AI_PIECE) or find_possible_move(self) == (-1,-1)
-    
 
     def minimax(self,board, depth, alpha, beta, maximizingPlayer, positions):
               
-        is_terminal = 0 #is_terminal_node(self)
+        is_terminal =  is_win_by_premove(board, positions)
         if depth == 0 or is_terminal:
             if is_terminal:
-                if winning_move(board, AI_PIECE):
-                    return (None, Defines.MAXINT)
-                elif winning_move(board, PLAYER_PIECE):
-                    return (None, Defines.MININT)
-                else: # Game is over, no more valid moves
-                    return (None, 0)
+                if maximizingPlayer:
+                    return (None,Defines.MININT)
+                else:
+                    return (None,Defines.MAXINT)
+                # else: # Game is over, no more valid moves
+                #     return (None, 0)
             else: # Depth is
                 #return (None, score_position(board, AI_PIECE)) #Comentado por ahora la llamada a un metodo, voy a probar con numeros random primero    
                 return (None,random.uniform(1, 300))
@@ -117,7 +113,7 @@ class SearchEngine():
                         # Llamar recursivamente al algoritmo Minimax con las dos posiciones
                         new_score = self.minimax(b_copy, depth-1, alpha, beta, False,[pos1[0],pos1[1], pos2[0],pos2[1]])
 
-                        if new_score[1] > value:
+                        if new_score[1]> value:
                             value = new_score[1]
                             best_move = (pos1, pos2)
                             alpha = max(alpha, value)
