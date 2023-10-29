@@ -2,8 +2,8 @@ from re import L
 from defines import *
 import time
 import numpy as np 
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
+#import matplotlib.pyplot as plt
+#import matplotlib.colors as mcolors
 # import matplotlib
 # matplotlib.use("Agg")
 
@@ -169,7 +169,7 @@ def show_m_board(m_board):
     cmap_name = "custom_colormap"
     cm = mcolors.LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
 
-    # Normaliza los valores para que estén en el rango [0, 1]
+    # Normaliza los valores para que estï¿½n en el rango [0, 1]
     norm = mcolors.Normalize(vmin=-1, vmax=1)
 
     plt.figure(figsize=(6,6))
@@ -213,13 +213,20 @@ def posiciones_disponibles_sin_repetidos(matriz, tamano, posicion1, posicion2):
     # Elimina duplicados manteniendo el orden
     disponibles_sin_repetidos = list(dict.fromkeys(disponibles_con_duplicados))
     
+    #si las listas son iguales, siginfica que no habÃ­a ningÃºn repetido
+    #con lo cual son fichas que estÃ¡n lejos una de otra
+    #la lista vacÃ­a hace que en los 2 fors anidados del minimax
+    #no se recorra nada y se siga por otra posiciÃ³n en la recursiÃ³n
+    if disponibles_con_duplicados == disponibles_sin_repetidos:
+        disponibles_sin_repetidos = []
+    
     return disponibles_sin_repetidos
 
 def posiciones_disponibles_con_duplicados(matriz, tamano, posicion1, posicion2):
-    # Llama a la función posiciones_disponibles con la primera posición central
+    # Llama a la funciï¿½n posiciones_disponibles con la primera posiciï¿½n central
     disponibles1 = get_valid_locations(matriz, tamano, posicion1)
     
-    # Llama a la función posiciones_disponibles con la segunda posición central
+    # Llama a la funciï¿½n posiciones_disponibles con la segunda posiciï¿½n central
     disponibles2 = get_valid_locations(matriz, tamano, posicion2)
     
     # Combina las dos listas sin eliminar duplicados
@@ -237,7 +244,7 @@ def print_board_2(board, casillas):
             y = i
             stone = board[x][y]
             if (x, y) in casillas:
-                # Busca la posición en casillas y obtén su índice para imprimir el número
+                # Busca la posiciï¿½n en casillas y obtï¿½n su ï¿½ndice para imprimir el nï¿½mero
                 # num = casillas.index((x, y)) + 1
                 print(" X", end="")
             elif stone == Defines.NOSTONE:
@@ -255,7 +262,7 @@ def print_board_2(board, casillas):
 def make_move_2(board, move, color):
     board[move[0]][move[1]] = color
     
-#Prueba de la evaluación del paper del felixiano.. 
+#Prueba de la evaluaciï¿½n del paper del felixiano.. 
 def hmove_evaluation(board, player, row, col):
     E = 0
     epsilon = 0.5  # Valor ?

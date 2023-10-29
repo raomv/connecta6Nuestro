@@ -61,7 +61,7 @@ class SearchEngine():
 
         return alpha
         
-    def check_first_move(self):  #Recorre todas las posiciones y devuelve false si está vacio
+    def check_first_move(self):  #Recorre todas las posiciones y devuelve false si estï¿½ vacio
         for i in range(1,len(self.m_board)-1):              #Recorre numero de filas
             for j in range(1, len(self.m_board[i])-1):      #Recorre numero de columnas 
                 if(self.m_board[i][j] != Defines.NOSTONE):
@@ -81,6 +81,16 @@ class SearchEngine():
             tamanito=Defines.TAMANO
         else:
             tamanito=2
+            
+        """         numsPos = len(positions)
+        if numsPos <= 5:
+            tamanito = 4
+        elif numsPos > 5 and numsPos <= 7:
+            tamanito = 3
+        else:
+            tamanito = 2 """
+        
+        #print(f"tamanito: {tamanito}")
             
         is_terminal =  is_win_by_premove(board, positions)
         if depth == 0 or is_terminal:
@@ -105,9 +115,8 @@ class SearchEngine():
                 valid_locations = get_valid_locations(board,tamanito,positions)
             else:
                 valid_locations =  posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
-        
            # Este print es para mostrar las posibles jugadas que harian mindy y maximiliano
-        #print_board_2(board, valid_locations) 
+        print_board_2(board, valid_locations) 
 
         if maximizingPlayer:
             value = Defines.MININT
@@ -117,7 +126,7 @@ class SearchEngine():
                     if pos1 != pos2:
                         # Realizar la copia del tablero y simular el movimiento
                         b_copy = board.copy()
-                        make_move_2(b_copy,pos1,self.m_chess_type) #He hecho este método para trabajar con Numpy y no con listas
+                        make_move_2(b_copy,pos1,self.m_chess_type) #He hecho este mï¿½todo para trabajar con Numpy y no con listas
                         make_move_2(b_copy,pos2,self.m_chess_type)
                         
                         # Llamar recursivamente al algoritmo Minimax con las dos posiciones
