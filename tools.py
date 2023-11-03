@@ -31,7 +31,7 @@ def unmake_move(board, move):
     board[move.positions[1].x][move.positions[1].y] = Defines.NOSTONE
 
 def is_win_by_premove(board, preMove):
-    directions = [(1, 0), (0, 1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
     board = np.array(board)  # Convierte la matriz a un array de NumPy
 
     for direction in directions:
@@ -205,6 +205,36 @@ def get_valid_locations(matriz,tamano,posicion):
         
         return posiciones_disponibles
 
+def get_valid_locations_2(matriz, tamano, posiciones):
+    # matriz ya es numpy
+    filas, columnas = matriz.shape
+    posiciones_validas = []
+
+    for posicion in posiciones:
+        inicio_fila = max(0, posicion[0] - tamano // 2)
+        fin_fila = min(filas, posicion[0] + tamano // 2 + 1)
+        inicio_columna = max(0, posicion[1] - tamano // 2)
+        fin_columna = min(columnas, posicion[1] + tamano // 2 + 1)
+
+        indices_fila, indices_columna = np.indices(matriz.shape)
+        posiciones_disponibles = list(zip(indices_fila[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel(),
+                                          indices_columna[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel()))
+
+        # Filtrar las posiciones ocupadas o en el borde del tablero
+        posiciones_disponibles = [pos for pos in posiciones_disponibles if matriz[pos[0], pos[1]] == Defines.NOSTONE]
+        # Calcular la distancia al centro
+        centro = (tamano // 2, tamano // 2)
+        posiciones_disponibles.sort(key=lambda pos: np.linalg.norm(np.array(pos) - np.array(centro)))
+        
+        # Utilizar un conjunto temporal para eliminar duplicados
+        unique_positions = set()
+        for pos in posiciones_disponibles:
+            unique_positions.add(pos)
+        
+        # Agregar las posiciones únicas a la lista de posiciones válidas
+        posiciones_validas.extend(list(unique_positions))
+
+    return posiciones_validas
 def posiciones_disponibles_sin_repetidos(matriz, tamano, posicion1, posicion2):
     # matriz ya es numpy
     # Obtiene las posiciones disponibles con duplicados
@@ -217,8 +247,8 @@ def posiciones_disponibles_sin_repetidos(matriz, tamano, posicion1, posicion2):
     #con lo cual son fichas que están lejos una de otra
     #la lista vacía hace que en los 2 fors anidados del minimax
     #no se recorra nada y se siga por otra posición en la recursión
-    if disponibles_con_duplicados == disponibles_sin_repetidos:
-        disponibles_sin_repetidos = []
+    # if disponibles_con_duplicados == disponibles_sin_repetidos:
+    #     disponibles_sin_repetidos = []
     
     return disponibles_sin_repetidos
 
@@ -268,7 +298,7 @@ def hmove_evaluation(board, player, row, col):
     epsilon = 0.5  # Valor ?
     weights = [0, 1, 2, 3, 4, 5]  # Valores w1, w2, w3, w4, w5
 
-    directions = [(1, 0), (0, 1), (1, 1), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
 
     for direction in directions:
         Edirectional = 1
@@ -290,3 +320,54 @@ def hmove_evaluation(board, player, row, col):
             E += Edirectional
 
     return E
+
+#Jugada defensiva, cual espartano AuuuAuuuAuuu. 
+def Defensa_Siciliana(board,preMove):
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+
+    for direction in directions:
+        for i in range(2): # Para mirar las dos piedras
+            x1, y1 = preMove[i * 2], preMove[i * 2 + 1]
+            movStone = board[x1, y1]
+
+            if movStone == Defines.BORDER or movStone == Defines.NOSTONE: # No deberia entrar nunca.. Me baso en las ultimas jugadas..
+                continue
+
+            countFichas = 1  # Contador de fichas consecutivas
+            recommended_positions = []
+            # Avanza en una dirección
+            x, y = x1, y1
+            for ii in range(6):
+                if 0 <= x < board.shape[0] and 0 <= y < board.shape[1] and (board[x, y] == movStone or board[x, y] == Defines.NOSTONE) :
+                    if board[x, y] == movStone:
+                        countFichas += 1
+                        x += direction[0]
+                        y += direction[1]
+                    else:
+                        recommended_positions.append((x, y)) 
+                        x += direction[0]
+                        y += direction[1]
+                else:
+                    break
+                
+            x, y = x1 - direction[0], y1 - direction[1]   #Creo que mejor asi :^)
+            for jj in range(6):
+                if 0 <= x < board.shape[0] and 0 <= y < board.shape[1] and (board[x, y] == movStone or board[x, y] == Defines.NOSTONE) :
+                    if board[x, y] == movStone:
+                        countFichas += 1
+                        x -= direction[0]
+                        y -= direction[1]                        
+                    else: 
+                        recommended_positions.append((x, y))
+                        x -= direction[0]
+                        y -= direction[1]  
+                else:
+                    break
+
+            if countFichas >= 4:
+                # El oponente tiene al menos 4 fichas en una línea de 6
+                # Devolver True y las posiciones recomendadas para bloquear
+                return True, recommended_positions
+
+    # Si no se encontró ninguna posibilidad de que el oponente gane, devolver False
+    return False, []
