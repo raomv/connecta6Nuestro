@@ -1,3 +1,4 @@
+from hmac import new
 from os import terminal_size
 from pickle import TRUE
 from token import ISTERMINAL
@@ -32,13 +33,15 @@ class SearchEngine():
         if  len(Defines.LVMOVE)>2:
             Jugada = Defensa_Siciliana(np.array(self.m_board),Defines.LVMOVE)
             if Jugada[0]:
-                [mejoresMov, alpha]=self.minimax_Siciliano(np.array(self.m_board), 1,Defines.MININT,Defines.MAXINT, True, Defines.LVMOVE,Jugada[1])
+                Defines.Multiplicador = Jugada[1]
+                [mejoresMov, alpha]=self.minimax(np.array(self.m_board), 3,Defines.MININT,Defines.MAXINT, True, Defines.LVMOVE,[],1)
                 bestMove.positions[0].x = mejoresMov[0][0]
                 bestMove.positions[0].y = mejoresMov[0][1]
                 bestMove.positions[1].x = mejoresMov[1][0]
                 bestMove.positions[1].y = mejoresMov[1][1]
                 make_move(self.m_board,bestMove,ourColor)
                 Defines.LVMOVE = [mejoresMov[0][0],mejoresMov[0][1], mejoresMov[1][0],mejoresMov[1][1]]
+                Defines.Multiplicador = []
                 return alpha
         
         alpha = 0
@@ -52,7 +55,7 @@ class SearchEngine():
 
         else:   
             # self,board, depth, alpha, beta, maximizingPlayer, position1, position2)
-            [mejoresMov, alpha]=self.minimax(np.array(self.m_board),Defines.DEPTH,Defines.MININT,Defines.MAXINT,True,Defines.LVMOVE)
+            [mejoresMov, alpha]=self.minimax(np.array(self.m_board),Defines.DEPTH,Defines.MININT,Defines.MAXINT,True,Defines.LVMOVE,[],2)
             #move1 = self.find_possible_move()
             bestMove.positions[0].x = mejoresMov[0][0]
             bestMove.positions[0].y = mejoresMov[0][1]
@@ -87,23 +90,23 @@ class SearchEngine():
         return (-1,-1)
 
 
-    def minimax(self,board, depth, alpha, beta, maximizingPlayer, positions):
-        if depth==Defines.DEPTH:
+    def minimax(self,board, depth, alpha, beta, maximizingPlayer, positions,evaluation_position,first_call):
+
+        if first_call!=0:
             tamanito=Defines.TAMANO
+            evaluation_position=posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
+            valid_locations=evaluation_position
+            if first_call==1: #Si es la primera llamada y es desde defensa 
+                valid_locations+=Defines.Multiplicador 
+                valid_locations=list(dict.fromkeys(valid_locations))
+            print_board_2(board, valid_locations)     
         else:
             tamanito=2
-            
-        """         numsPos = len(positions)
-        if numsPos <= 5:
-            tamanito = 4
-        elif numsPos > 5 and numsPos <= 7:
-            tamanito = 3
-        else:
-            tamanito = 2 """
-        
-        #print(f"tamanito: {tamanito}")
+            valid_locations_tmp =  posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
+            valid_locations= [pos for pos in valid_locations_tmp if pos in evaluation_position]
             
         is_terminal =  is_win_by_premove(board, positions)
+
         if depth == 0 or is_terminal:
             if is_terminal:
                 if maximizingPlayer:
@@ -115,64 +118,81 @@ class SearchEngine():
                 # else: # Game is over, no more valid moves
                 #     return (None, 0)
             else: # Depth is
-                #return (None, score_position(board, AI_PIECE)) #Comentado por ahora la llamada a un metodo, voy a probar con numeros random primero    
-                # return (None,random.uniform(1, 300))
                 if maximizingPlayer:
                     return (None,hmove_evaluation(board,self.m_chess_type,positions[0],positions[1])+hmove_evaluation(board,self.m_chess_type,positions[2],positions[3]))
                 else:
-                     return (None,hmove_evaluation(board,self.m_chess_type^3,positions[0],positions[1])+hmove_evaluation(board,self.m_chess_type^3,positions[2].positions[3]))                   
-        else:   #Antes lo tenia arriba, pero si esto para evaluar, pa que evaluar posibles posiciones 
-            if len(positions)==2:
-                valid_locations = get_valid_locations(board,tamanito,positions)
-            else:
-                valid_locations =  posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
+                     return (None,hmove_evaluation(board,self.m_chess_type^3,positions[0],positions[1])+hmove_evaluation(board,self.m_chess_type^3,positions[2],positions[3]))       
+        elif len(valid_locations) < 2:
+                if maximizingPlayer:
+                    return (None,hmove_evaluation(board,self.m_chess_type,positions[0],positions[1])+hmove_evaluation(board,self.m_chess_type,positions[2],positions[3]))
+                else:
+                     return (None,hmove_evaluation(board,self.m_chess_type^3,positions[0],positions[1])+hmove_evaluation(board,self.m_chess_type^3,positions[2],positions[3]))       
+        # else:   #Antes lo tenia arriba, pero si esto para evaluar, pa que evaluar posibles posiciones 
+        #     if len(positions)==2:
+        #         valid_locations = get_valid_locations(board,tamanito,positions)
+        #     else:
+        #         valid_locations =  posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
            # Este print es para mostrar las posibles jugadas que harian mindy y maximiliano
         # print_board_2(board, valid_locations) 
 
         if maximizingPlayer:
             value = Defines.MININT
             best_move = None
-            for pos1 in valid_locations:
-                for pos2 in valid_locations:
-                    if pos1 != pos2:
-                        # Realizar la copia del tablero y simular el movimiento
-                        b_copy = board.copy()
-                        make_move_2(b_copy,pos1,self.m_chess_type) #He hecho este m�todo para trabajar con Numpy y no con listas
-                        make_move_2(b_copy,pos2,self.m_chess_type)
-                        
-                        # Llamar recursivamente al algoritmo Minimax con las dos posiciones
-                        new_score = self.minimax(b_copy, depth-1, alpha, beta, False,[pos1[0],pos1[1], pos2[0],pos2[1]])
+            for i in range(len(valid_locations)):
+                pos1 = valid_locations[i]
+                for j in range(i + 1, len(valid_locations)):
+                    pos2 = valid_locations[j]                        # Realizar la copia del tablero y simular el movimiento
+                    b_copy = board.copy()
+                    make_move_2(b_copy,pos1,self.m_chess_type) #He hecho este m�todo para trabajar con Numpy y no con listas
+                    make_move_2(b_copy,pos2,self.m_chess_type)      
+                    # print_board_2(b_copy, valid_locations)  
+                    # print_board(b_copy, [pos1,pos2])
+                    # Llamar recursivamente al algoritmo Minimax con las dos posiciones
+                    new_score = self.minimax(b_copy, depth-1, alpha, beta, False,[pos1[0],pos1[1], pos2[0],pos2[1]],evaluation_position,0)
+                    puntuacion_positiva=new_score[1]
+                    if len(Defines.Multiplicador)>0 and new_score[0]!=None:
+                        if new_score[0][1] in Defines.Multiplicador:
+                            puntuacion_positiva+=300
+                        elif new_score[0][1] in Defines.Multiplicador:
+                            puntuacion_positiva+=300
+                    if puntuacion_positiva> value:
+                        value = puntuacion_positiva
+                        best_move = (pos1, pos2)
+                        alpha = max(alpha, value)
 
-                        if new_score[1]> value:
-                            value = new_score[1]
-                            best_move = (pos1, pos2)
-                            alpha = max(alpha, value)
-
-                        if alpha >= beta:
-                            break
+                    if alpha >= beta:
+                        break
                 if alpha >= beta:
-                    break
-
+                  break
             return best_move, value
         else:  # Minimizing player
             value = Defines.MAXINT
             best_move = None
-            for pos1 in valid_locations:
-                for pos2 in valid_locations:
-                    if pos1 != pos2:
-                        b_copy = board.copy()
-                        make_move_2(b_copy,pos1,self.m_chess_type ^ 3)
-                        make_move_2(b_copy,pos2,self.m_chess_type ^ 3)
+            for i in range(len(valid_locations)):
+                pos1 = valid_locations[i]
+                for j in range(i + 1, len(valid_locations)):
+                    pos2 = valid_locations[j]
+                    b_copy = board.copy()
+                    make_move_2(b_copy,pos1,self.m_chess_type ^ 3)
+                    make_move_2(b_copy,pos2,self.m_chess_type ^ 3) 
+                    # print_board_2(b_copy, valid_locations)    
+                    # print_board(b_copy, [pos1,pos2])
+                    # new_valid_positions=[pos for pos in valid_locations if pos not in [pos1, pos2]]
+                    new_score = self.minimax(b_copy, depth-1, alpha, beta, True,[pos1[0],pos1[1], pos2[0],pos2[1]],evaluation_position,0)
+                    puntuacion_negativa=new_score[1]*-1
+                    if len(Defines.Multiplicador)>0 and new_score[0]!=None:
+                        if new_score[0][1] in Defines.Multiplicador:
+                            puntuacion_negativa-=300
+                        elif new_score[0][1] in Defines.Multiplicador:
+                            puntuacion_negativa-=300
 
-                        new_score = self.minimax(b_copy, depth-1, alpha, beta, True,[pos1[0],pos1[1], pos2[0],pos2[1]])
+                    if puntuacion_negativa < value:
+                        value = puntuacion_negativa
+                        best_move = (pos1, pos2)
+                        beta = min(beta, value)
 
-                        if new_score[1] < value:
-                            value = new_score[1]
-                            best_move = (pos1, pos2)
-                            beta = min(beta, value)
-
-                        if alpha <= beta:
-                            break
+                    if alpha <= beta:
+                        break
                 if alpha <= beta:
                     break
             return best_move, value
@@ -183,7 +203,7 @@ class SearchEngine():
         is_terminal = is_win_by_premove(board, positions)
         if depth==1:
             valid_locations=get_valid_locations_2(board,tamanito,valid_locations)
-            print_board_2(board, valid_locations)        
+            print_board(board, valid_locations)        
         if depth == 0 or is_terminal:
             if is_terminal:
                 if maximizingPlayer:

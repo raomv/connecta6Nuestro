@@ -16,6 +16,7 @@ class Defines:
     TAMANO = 4       #Tamaño de la ventana cuadrada de evaluacion para posicionar la ficha
     DEPTH = 2        #Profundidad de busqueda
     LVMOVE = []        #Last Valid Move, almacena el ultimo movimiento valido
+    Multiplicador=[] #Multiplicador de la ventana de evaluacion si evita que gane el rival
         
 
 class StonePosition:

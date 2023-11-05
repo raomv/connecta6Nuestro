@@ -185,25 +185,40 @@ def show_m_board(m_board):
     plt.tight_layout()
     plt.show()
 
-def get_valid_locations(matriz,tamano,posicion):
-      # matriz ya es numpy
-        filas, columnas = matriz.shape
-        inicio_fila = max(0, posicion[0] - tamano // 2)
-        fin_fila = min(filas, posicion[0] + tamano // 2 + 1)
-        inicio_columna = max(0, posicion[1] - tamano // 2)
-        fin_columna = min(columnas, posicion[1] + tamano // 2 + 1)
+def get_valid_locations(matriz, tamano, posicion):
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+    posiciones_disponibles=[]
+    # matriz ya es numpy    
+    for multi in range(2):
+        for direction in directions:
+            x1, y1 = posicion[0], posicion[1]
+            movStone = matriz[x1, y1]
+            x, y = x1+direction[0]*(multi+1), y1+direction[1]*(multi+1)
+            if 0 <= x < matriz.shape[0] and 0 <= y < matriz.shape[1] and matriz[x, y] == Defines.NOSTONE:
+                posiciones_disponibles.append((x, y)) 
+                
+            x, y = x1-direction[0]*(multi+1), y1-direction[1]*(multi+1)
+            if 0 <= x < matriz.shape[0] and 0 <= y < matriz.shape[1] and matriz[x, y] == Defines.NOSTONE:
+                posiciones_disponibles.append((x, y))     
 
-        indices_fila, indices_columna = np.indices(matriz.shape)
-        posiciones_disponibles = list(zip(indices_fila[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel(),
-                                          indices_columna[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel()))
+    # filas, columnas = matriz.shape
+    # inicio_fila = max(0, posicion[0] - tamano // 2)
+    # fin_fila = min(filas, posicion[0] + tamano // 2 + 1)
+    # inicio_columna = max(0, posicion[1] - tamano // 2)
+    # fin_columna = min(columnas, posicion[1] + tamano // 2 + 1)
 
-        # Filtrar las posiciones ocupadas o en el borde del tablero
-        posiciones_disponibles = [pos for pos in posiciones_disponibles if matriz[pos[0], pos[1]] == Defines.NOSTONE]
-        # Calcular la distancia al centro
-        centro = (tamano // 2, tamano // 2)
-        posiciones_disponibles.sort(key=lambda pos: np.linalg.norm(np.array(pos) - np.array(centro)))
-        
-        return posiciones_disponibles
+    # indices_fila, indices_columna = np.indices(matriz.shape)
+    # posiciones_disponibles = list(zip(indices_fila[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel(),
+    #                                   indices_columna[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel()))
+
+    # # Filtrar las posiciones ocupadas o en el borde del tablero
+    # posiciones_disponibles = [pos for pos in posiciones_disponibles if matriz[pos[0], pos[1]] == Defines.NOSTONE]
+
+    # # Calcular la distancia al centro
+    # centro = (tamano // 2, tamano // 2)
+    # # posiciones_disponibles.sort(key=lambda pos: np.linalg.norm(np.array(pos) - np.array(centro)))
+
+    return posiciones_disponibles
 
 def get_valid_locations_2(matriz, tamano, posiciones):
     # matriz ya es numpy
@@ -260,7 +275,8 @@ def posiciones_disponibles_con_duplicados(matriz, tamano, posicion1, posicion2):
     disponibles2 = get_valid_locations(matriz, tamano, posicion2)
     
     # Combina las dos listas sin eliminar duplicados
-    disponibles_combinados = disponibles1 + disponibles2
+    disponibles_combinados=[item for pair in zip(disponibles1, disponibles2) for item in pair] # Intercalados
+    # disponibles_combinados = disponibles1 + disponibles2 # Uno detras del otro 
     
     return disponibles_combinados
 
@@ -276,7 +292,11 @@ def print_board_2(board, casillas):
             if (x, y) in casillas:
                 # Busca la posici�n en casillas y obt�n su �ndice para imprimir el n�mero
                 # num = casillas.index((x, y)) + 1
-                print(" X", end="")
+                hh=casillas.index((x,y))
+                if hh<10:
+                    print(f" {hh}", end="")
+                else:
+                    print(f"{hh}", end="")
             elif stone == Defines.NOSTONE:
                 print(" -", end="")
             elif stone == Defines.BLACK:
@@ -292,13 +312,13 @@ def print_board_2(board, casillas):
 def make_move_2(board, move, color):
     board[move[0]][move[1]] = color
     
-#Prueba de la evaluaci�n del paper del felixiano.. 
+#Prueba de la evaluacion del paper del felixiano.. 
 def hmove_evaluation(board, player, row, col):
     E = 0
-    epsilon = 0.5  # Valor ?
+    epsilon = 0.5  # Valor epsilon
     weights = [0, 1, 2, 3, 4, 5]  # Valores w1, w2, w3, w4, w5
 
-    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1), (0,-1), (-1, -1), (-1, 0), (-1, 1) ]
 
     for direction in directions:
         Edirectional = 1
@@ -333,7 +353,7 @@ def Defensa_Siciliana(board,preMove):
             if movStone == Defines.BORDER or movStone == Defines.NOSTONE: # No deberia entrar nunca.. Me baso en las ultimas jugadas..
                 continue
 
-            countFichas = 1  # Contador de fichas consecutivas
+            countFichas = 0  # Contador de fichas consecutivas
             recommended_positions = []
             # Avanza en una dirección
             x, y = x1, y1
@@ -351,7 +371,7 @@ def Defensa_Siciliana(board,preMove):
                     break
                 
             x, y = x1 - direction[0], y1 - direction[1]   #Creo que mejor asi :^)
-            for jj in range(6):
+            for jj in range(5):
                 if 0 <= x < board.shape[0] and 0 <= y < board.shape[1] and (board[x, y] == movStone or board[x, y] == Defines.NOSTONE) :
                     if board[x, y] == movStone:
                         countFichas += 1
