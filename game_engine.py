@@ -20,6 +20,7 @@ class GameEngine:
 
     def init_game(self):
         init_board(self.m_board)
+        Defines.ContadorTurnos=0
 
     def on_help(self):
         print(
@@ -60,12 +61,10 @@ class GameEngine:
                 self.m_best_move = msg2move(msg[6:])
                 make_move(self.m_board, self.m_best_move, Defines.BLACK)
                 self.m_chess_type = Defines.BLACK
-                Defines.LVMOVE = [self.m_best_move.positions[0].x,self.m_best_move.positions[0].y, self.m_best_move.positions[1].x,self.m_best_move.positions[1].y]
             elif msg.startswith("white"):
                 self.m_best_move = msg2move(msg[6:])
                 make_move(self.m_board, self.m_best_move, Defines.WHITE)
                 self.m_chess_type = Defines.WHITE
-                Defines.LVMOVE = [self.m_best_move.positions[0].x,self.m_best_move.positions[0].y, self.m_best_move.positions[1].x,self.m_best_move.positions[1].y]
             elif msg == "next":
                 self.m_chess_type = self.m_chess_type ^ 3
                 if self.search_a_move(self.m_chess_type, self.m_best_move):
@@ -90,9 +89,16 @@ class GameEngine:
                     print(msg)
                     flush_output()
             elif msg.startswith("move"):
+                self.m_chess_type = self.m_chess_type ^ 3
                 self.m_best_move = msg2move(msg[5:])
-                make_move(self.m_board, self.m_best_move, self.m_chess_type ^ 3)
-                if is_win_by_premove(self.m_board, Defines.LVMOVE):
+                make_move(self.m_board, self.m_best_move, self.m_chess_type)
+                if self.m_chess_type==Defines.BLACK: #juega negro   
+                    own_lastPlay = Defines.LVMOVE_N
+                    rival_lastPlay = Defines.LVMOVE_B
+                else: #Juega blanca
+                    own_lastPlay = Defines.LVMOVE_B
+                    rival_lastPlay = Defines.LVMOVE_N
+                if is_win_by_premove(self.m_board,rival_lastPlay):
                     print("We lost!")
                     print_board(self.m_board)
                     break
@@ -123,6 +129,7 @@ class GameEngine:
         print(f"AB Time:\t{end - start:.3f}")
         print(f"Node:\t{self.m_search_engine.m_total_nodes}\n")
         print(f"Score:\t{score:.3f}")
+        print(f"Turno:\t{Defines.ContadorTurnos+1:.0f}")
         return True
 
 def flush_output():

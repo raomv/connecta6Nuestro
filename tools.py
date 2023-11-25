@@ -1,4 +1,5 @@
 from re import L
+import re
 from defines import *
 import time
 import numpy as np 
@@ -23,7 +24,12 @@ def init_board(board):
 def make_move(board, move, color):
     board[move.positions[0].x][move.positions[0].y] = color
     board[move.positions[1].x][move.positions[1].y] = color
-    Defines.LVMOVE = [move.positions[0].x,move.positions[0].y, move.positions[1].x,move.positions[1].y]
+    if color == Defines.BLACK:
+        Defines.LVMOVE_N = [move.positions[0].x,move.positions[0].y, move.positions[1].x,move.positions[1].y]
+    else: 
+        Defines.LVMOVE_B = [move.positions[0].x,move.positions[0].y, move.positions[1].x,move.positions[1].y]
+            
+    Defines.ContadorTurnos += 1
 
 
 def unmake_move(board, move):
@@ -185,6 +191,7 @@ def show_m_board(m_board):
     plt.tight_layout()
     plt.show()
 
+
 def get_valid_locations(matriz, tamano, posicion):
     directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
     posiciones_disponibles=[]
@@ -201,24 +208,8 @@ def get_valid_locations(matriz, tamano, posicion):
             if 0 <= x < matriz.shape[0] and 0 <= y < matriz.shape[1] and matriz[x, y] == Defines.NOSTONE:
                 posiciones_disponibles.append((x, y))     
 
-    # filas, columnas = matriz.shape
-    # inicio_fila = max(0, posicion[0] - tamano // 2)
-    # fin_fila = min(filas, posicion[0] + tamano // 2 + 1)
-    # inicio_columna = max(0, posicion[1] - tamano // 2)
-    # fin_columna = min(columnas, posicion[1] + tamano // 2 + 1)
-
-    # indices_fila, indices_columna = np.indices(matriz.shape)
-    # posiciones_disponibles = list(zip(indices_fila[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel(),
-    #                                   indices_columna[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel()))
-
-    # # Filtrar las posiciones ocupadas o en el borde del tablero
-    # posiciones_disponibles = [pos for pos in posiciones_disponibles if matriz[pos[0], pos[1]] == Defines.NOSTONE]
-
-    # # Calcular la distancia al centro
-    # centro = (tamano // 2, tamano // 2)
-    # # posiciones_disponibles.sort(key=lambda pos: np.linalg.norm(np.array(pos) - np.array(centro)))
-
     return posiciones_disponibles
+
 
 def get_valid_locations_2(matriz, tamano, posiciones):
     # matriz ya es numpy
@@ -250,6 +241,8 @@ def get_valid_locations_2(matriz, tamano, posiciones):
         posiciones_validas.extend(list(unique_positions))
 
     return posiciones_validas
+
+
 def posiciones_disponibles_sin_repetidos(matriz, tamano, posicion1, posicion2):
     # matriz ya es numpy
     # Obtiene las posiciones disponibles con duplicados
@@ -257,14 +250,7 @@ def posiciones_disponibles_sin_repetidos(matriz, tamano, posicion1, posicion2):
     
     # Elimina duplicados manteniendo el orden
     disponibles_sin_repetidos = list(dict.fromkeys(disponibles_con_duplicados))
-    
-    #si las listas son iguales, siginfica que no había ningún repetido
-    #con lo cual son fichas que están lejos una de otra
-    #la lista vacía hace que en los 2 fors anidados del minimax
-    #no se recorra nada y se siga por otra posición en la recursión
-    # if disponibles_con_duplicados == disponibles_sin_repetidos:
-    #     disponibles_sin_repetidos = []
-    
+      
     return disponibles_sin_repetidos
 
 def posiciones_disponibles_con_duplicados(matriz, tamano, posicion1, posicion2):
@@ -279,6 +265,7 @@ def posiciones_disponibles_con_duplicados(matriz, tamano, posicion1, posicion2):
     # disponibles_combinados = disponibles1 + disponibles2 # Uno detras del otro 
     
     return disponibles_combinados
+
 
 # Metodo de comprobacion para las casillas disponibles a analizar
 def print_board_2(board, casillas):
@@ -308,17 +295,19 @@ def print_board_2(board, casillas):
         print(f"{chr(ord('A') - 1 + i)}", end="\n")
     print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
     
+
 # Metodo de colocacion de fichas pero trabajando con numpy
 def make_move_2(board, move, color):
     board[move[0]][move[1]] = color
     
+
 #Prueba de la evaluacion del paper del felixiano.. 
 def hmove_evaluation(board, player, row, col):
     E = 0
-    epsilon = 0.5  # Valor epsilon
-    weights = [0, 1, 2, 3, 4, 5]  # Valores w1, w2, w3, w4, w5
+    epsilon = 0.3  # Valor epsilon
+    weights = [10, 8, 6, 4, 1, 0]  # Valores w1, w2, w3, w4, w5
 
-    directions = [(1, 0), (0, 1), (1, 1), (1, -1), (0,-1), (-1, -1), (-1, 0), (-1, 1) ]
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
 
     for direction in directions:
         Edirectional = 1
@@ -331,9 +320,10 @@ def hmove_evaluation(board, player, row, col):
                     break
 
                 if board[r][c] == 3 - player:  # Oponente's stone or border
+                    Edirectional = 0
                     break
                 elif board[r][c] == 0:  # Empty point
-                    Edirectional *= epsilon
+                    Edirectional += epsilon
                 elif board[r][c] == player:  # Own stone
                     Edirectional *= weights[k]
 
@@ -341,11 +331,22 @@ def hmove_evaluation(board, player, row, col):
 
     return E
 
-#Jugada defensiva, cual espartano AuuuAuuuAuuu. 
-def Defensa_Siciliana(board,preMove):
+
+def undo_move(board, pos):
+    # Supongamos que la posición pos es una tupla (x, y)
+    x, y = pos
+
+    # Revertir el movimiento en el tablero
+    board[x][y] = Defines.NOSTONE  # O el valor adecuado para indicar una casilla vacía en tu juego
+
+
+#Como está la situacion en defesa
+def SituacionDefensa(board,preMove):
     directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
 
     for direction in directions:
+        direccion1=0
+        direccion2=0
         for i in range(2): # Para mirar las dos piedras
             x1, y1 = preMove[i * 2], preMove[i * 2 + 1]
             movStone = board[x1, y1]
@@ -355,6 +356,9 @@ def Defensa_Siciliana(board,preMove):
 
             countFichas = 0  # Contador de fichas consecutivas
             recommended_positions = []
+            recommended_positions1 = []
+            recommended_positions2 = []
+
             # Avanza en una dirección
             x, y = x1, y1
             for ii in range(6):
@@ -364,10 +368,12 @@ def Defensa_Siciliana(board,preMove):
                         x += direction[0]
                         y += direction[1]
                     else:
-                        recommended_positions.append((x, y)) 
+                        direccion1=1
+                        recommended_positions1.append((x, y)) 
                         x += direction[0]
                         y += direction[1]
                 else:
+                    direccion1=0
                     break
                 
             x, y = x1 - direction[0], y1 - direction[1]   #Creo que mejor asi :^)
@@ -378,10 +384,74 @@ def Defensa_Siciliana(board,preMove):
                         x -= direction[0]
                         y -= direction[1]                        
                     else: 
+                        direccion2=1
+                        recommended_positions2.append((x, y))
+                        x -= direction[0]
+                        y -= direction[1]
+                else:
+                    direccion2=0
+                    break
+
+            if countFichas >= 4:
+                if direccion1+direccion2==2:
+                    recommended_positions=[recommended_positions1[0:1], recommended_positions2[0:1]]
+                elif direccion1==1:
+                    recommended_positions=recommended_positions1[0:1]
+                else:
+                    recommended_positions=recommended_positions2[0:1]
+                
+                # El oponente tiene al menos 4 fichas en una línea de 6
+                # Devolver True y las posiciones recomendadas para bloquear
+                return True, recommended_positions, direccion1+direccion2
+
+    # Si no se encontró ninguna posibilidad de que el oponente gane, devolver False
+    return False, []
+
+def SituacionAtaque(board,preMove):
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+    
+    for direction in directions:
+        for i in range(2): # Para mirar las dos piedras
+            x1, y1 = preMove[i * 2], preMove[i * 2 + 1]
+            movStone = board[x1, y1]
+
+            if movStone == Defines.BORDER or movStone == Defines.NOSTONE: # No deberia entrar nunca.. Me baso en las ultimas jugadas..
+                continue
+
+            countFichas = 0  # Contador de fichas consecutivas
+            recommended_positions = []
+
+            # Avanza en una dirección
+            x, y = x1, y1
+            for ii in range(6):
+                if 0 <= x < board.shape[0] and 0 <= y < board.shape[1] and (board[x, y] == movStone or board[x, y] == Defines.NOSTONE) :
+                    if board[x, y] == movStone:
+                        countFichas += 1
+                        x += direction[0]
+                        y += direction[1]
+                    else:
+                        direccion1=1
+                        recommended_positions.append((x, y)) 
+                        x += direction[0]
+                        y += direction[1]
+                else:
+                    direccion1=0
+                    break
+                
+            x, y = x1 - direction[0], y1 - direction[1]   #Creo que mejor asi :^)
+            for jj in range(5):
+                if 0 <= x < board.shape[0] and 0 <= y < board.shape[1] and (board[x, y] == movStone or board[x, y] == Defines.NOSTONE) :
+                    if board[x, y] == movStone:
+                        countFichas += 1
+                        x -= direction[0]
+                        y -= direction[1]                        
+                    else: 
+                        direccion2=1
                         recommended_positions.append((x, y))
                         x -= direction[0]
-                        y -= direction[1]  
+                        y -= direction[1]
                 else:
+                    direccion2=0
                     break
 
             if countFichas >= 4:
@@ -391,3 +461,4 @@ def Defensa_Siciliana(board,preMove):
 
     # Si no se encontró ninguna posibilidad de que el oponente gane, devolver False
     return False, []
+
