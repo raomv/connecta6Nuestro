@@ -40,7 +40,7 @@ class SearchEngine():
             if (ourColor == self.m_chess_type):
                 #Opponent wins.
                 return 0;
-            else: # Yo creo que esto nunca se da :^|
+            else: 
                 #Self wins.
                 return Defines.MININT + 1;
     
@@ -71,7 +71,7 @@ class SearchEngine():
 
                     return alpha
                 else: #Si tengo que tapar oblogatoriamente por los dos lados :^{
-                    bestMove.positions[0].x = Jugada[1][0][0][0] #Feo tela pero funciona
+                    bestMove.positions[0].x = Jugada[1][0][0][0] 
                     bestMove.positions[0].y = Jugada[1][0][0][1]
                     bestMove.positions[1].x = Jugada[1][1][0][0]
                     bestMove.positions[1].y = Jugada[1][1][0][1]
@@ -79,7 +79,7 @@ class SearchEngine():
         
         #------------- Primer movimiento -------------
         alpha = 0
-        if(self.check_first_move()):
+        if(Defines.ContadorTurnos):
             bestMove.positions[0].x = 10
             bestMove.positions[0].y = 10
             bestMove.positions[1].x = 10

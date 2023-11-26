@@ -36,6 +36,7 @@ def unmake_move(board, move):
     board[move.positions[0].x][move.positions[0].y] = Defines.NOSTONE
     board[move.positions[1].x][move.positions[1].y] = Defines.NOSTONE
 
+
 def is_win_by_premove(board, preMove):
     directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
     board = np.array(board)  # Convierte la matriz a un array de NumPy
@@ -109,7 +110,7 @@ def msg2move(msg):
         move.score = 0
         return move
 
-
+'''
 def print_board(board, preMove=None):
     print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
     for i in range(1, Defines.GRID_NUM - 1):  #Esto crea un vector desde 1 hasta (21-1)-1
@@ -127,7 +128,27 @@ def print_board(board, preMove=None):
         print(" ", end="")        
         print(f"{chr(ord('A') - 1 + i)}", end="\n")
     print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
+    '''
+    
 
+def print_board(board, preMove=None):
+    print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
+    for i in range(1, Defines.GRID_NUM - 1):
+        print(f"{chr(ord('A') - 1 + i)}", end=" ")
+        for j in range(1, Defines.GRID_NUM - 1):
+            x = Defines.GRID_NUM - 1 - j
+            y = i
+            stone = board[x][y]
+            if stone == Defines.NOSTONE:
+                print(" -", end="")
+            elif stone == Defines.BLACK:
+                print(" O", end="")
+            elif stone == Defines.WHITE:
+                print(" *", end="")
+        print(" ", end="")        
+        print(f"{chr(ord('A') - 1 + i)}", end="\n")
+    print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
+    
 
 def print_score(move_list, n):
     board = [[0] * Defines.GRID_NUM for _ in range(Defines.GRID_NUM)]

@@ -69,22 +69,22 @@ class GameEngine:
                 self.m_chess_type = self.m_chess_type ^ 3
                 if self.search_a_move(self.m_chess_type, self.m_best_move):
                     make_move(self.m_board, self.m_best_move, self.m_chess_type)
-                    msg = f"move {move2msg(self.m_best_move)} "+f" color: {self.m_chess_type}" 
+                    msg = f"move {move2msg(self.m_best_move)} "#+f" color: {self.m_chess_type}" 
                     print(msg)
                     flush_output()
             elif msg.startswith("new"):
                 self.init_game()
-                if msg[4:] == "black":
+                if msg[4:] == "white":
                     self.m_best_move = msg2move("JJ")
-                    make_move(self.m_board, self.m_best_move, Defines.BLACK)
-                    self.m_chess_type = Defines.BLACK
+                    make_move(self.m_board, self.m_best_move, Defines.WHITE)
+                    self.m_chess_type = Defines.WHITE
                     msg = "move JJ"
                     print(msg)
                     flush_output()
                 else:
                     self.m_best_move = msg2move("JJ")
-                    make_move(self.m_board, self.m_best_move, Defines.WHITE)
-                    self.m_chess_type = Defines.WHITE
+                    make_move(self.m_board, self.m_best_move, Defines.BLACK)
+                    self.m_chess_type = Defines.BLACK
                     msg = "move JJ"
                     print(msg)
                     flush_output()
