@@ -39,7 +39,6 @@ def unmake_move(board, move):
 def is_win_by_premove(board, preMove):
     directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
     board = np.array(board)  # Convierte la matriz a un array de NumPy
-
     for direction in directions:
         for i in range(2):
             count = 0
@@ -65,9 +64,11 @@ def is_win_by_premove(board, preMove):
                 return True
     return False
 
+
 def get_msg(max_len):
     buf = input().strip()
     return buf[:max_len]
+
 
 def log_to_file(msg):
     g_log_file_name = Defines.LOG_FILE
@@ -82,6 +83,7 @@ def log_to_file(msg):
         print(f"Error: Can't open log file - {g_log_file_name}")
         return -1
 
+
 def move2msg(move):
     if move.positions[0].x == move.positions[1].x and move.positions[0].y == move.positions[1].y:
         msg = f"{chr(ord('S') - move.positions[0].x + 1)}{chr(move.positions[0].y + ord('A') - 1)}"
@@ -90,6 +92,7 @@ def move2msg(move):
         msg = f"{chr(move.positions[0].y + ord('A') - 1)}{chr(ord('S') - move.positions[0].x + 1)}" \
               f"{chr(move.positions[1].y + ord('A') - 1)}{chr(ord('S') - move.positions[1].x + 1)}"
         return msg
+
 
 def msg2move(msg):
     move = StoneMove()
@@ -105,6 +108,7 @@ def msg2move(msg):
         move.positions[1].y = ord(msg[2]) - ord('A') + 1
         move.score = 0
         return move
+
 
 def print_board(board, preMove=None):
     print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
@@ -124,6 +128,7 @@ def print_board(board, preMove=None):
         print(f"{chr(ord('A') - 1 + i)}", end="\n")
     print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
 
+
 def print_score(move_list, n):
     board = [[0] * Defines.GRID_NUM for _ in range(Defines.GRID_NUM)]
     for move in move_list:
@@ -139,57 +144,6 @@ def print_score(move_list, n):
             else:
                 print(f"{score:4}", end="")
         print()
-
-
-def show_m_board(m_board):
-    """
-    Visualizacion del estado del juego
-    """
-
-    col = 'ABCDEFGHIJKLMNOPQRS'
-    fil = 'SRQPONMLKJIHGFEDCBA'
-
-    # Array de anotaciones de 19x19
-    annot = []
-    for l1 in fil:
-        fila = []
-        for l2 in col:
-            fila.append(l2 + l1)
-        annot.append(fila)
-
-    #Obtener el tablero sin los bordes
-    m_board_rep = np.array(m_board)
-    m_board_rep = m_board_rep[1:20,1:20]
-    
-    # Reemplazar los 2 por -1
-    m_board_rep = np.where(m_board_rep == 2, -1, m_board_rep)
-    
-    fontdict = {'fontsize': 10,
-                'fontweight' : 50}
-    # Crear un colormap personalizado en el que el negro = 1, blanco = -1 y naranja = 0.
-    # Define los colores
-    colors = [(1, 1, 1), (1, 0.8, 0.4), (0, 0, 0)]
-
-    # Crea el colormap
-    n_bins = 3  
-    cmap_name = "custom_colormap"
-    cm = mcolors.LinearSegmentedColormap.from_list(cmap_name, colors, N=n_bins)
-
-    # Normaliza los valores para que est�n en el rango [0, 1]
-    norm = mcolors.Normalize(vmin=-1, vmax=1)
-
-    plt.figure(figsize=(6,6))
-    # Mostrar movimientos sobre el tablero
-    plt.imshow(m_board_rep, cmap=cm, norm=norm) 
-    
-    # Mostrar anotaciones sobre la imagen
-    for i in range(19):
-        for j in range(19):
-            plt.text(j, i, annot[i][j], ha="center", va="center", color="green", fontdict=fontdict)
-
-    plt.axis('off')
-    plt.tight_layout()
-    plt.show()
 
 
 def get_valid_locations(matriz, tamano, posicion):
@@ -209,38 +163,6 @@ def get_valid_locations(matriz, tamano, posicion):
                 posiciones_disponibles.append((x, y))     
 
     return posiciones_disponibles
-
-
-def get_valid_locations_2(matriz, tamano, posiciones):
-    # matriz ya es numpy
-    filas, columnas = matriz.shape
-    posiciones_validas = []
-
-    for posicion in posiciones:
-        inicio_fila = max(0, posicion[0] - tamano // 2)
-        fin_fila = min(filas, posicion[0] + tamano // 2 + 1)
-        inicio_columna = max(0, posicion[1] - tamano // 2)
-        fin_columna = min(columnas, posicion[1] + tamano // 2 + 1)
-
-        indices_fila, indices_columna = np.indices(matriz.shape)
-        posiciones_disponibles = list(zip(indices_fila[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel(),
-                                          indices_columna[inicio_fila:fin_fila, inicio_columna:fin_columna].ravel()))
-
-        # Filtrar las posiciones ocupadas o en el borde del tablero
-        posiciones_disponibles = [pos for pos in posiciones_disponibles if matriz[pos[0], pos[1]] == Defines.NOSTONE]
-        # Calcular la distancia al centro
-        centro = (tamano // 2, tamano // 2)
-        posiciones_disponibles.sort(key=lambda pos: np.linalg.norm(np.array(pos) - np.array(centro)))
-        
-        # Utilizar un conjunto temporal para eliminar duplicados
-        unique_positions = set()
-        for pos in posiciones_disponibles:
-            unique_positions.add(pos)
-        
-        # Agregar las posiciones únicas a la lista de posiciones válidas
-        posiciones_validas.extend(list(unique_positions))
-
-    return posiciones_validas
 
 
 def posiciones_disponibles_sin_repetidos(matriz, tamano, posicion1, posicion2):
@@ -304,8 +226,8 @@ def make_move_2(board, move, color):
 #Prueba de la evaluacion del paper del felixiano.. 
 def hmove_evaluation(board, player, row, col):
     E = 0
-    epsilon = 0.3  # Valor epsilon
-    weights = [10, 8, 6, 4, 1, 0]  # Valores w1, w2, w3, w4, w5
+    epsilon = 0.1  # Valor epsilon
+    weights = [8, 6, 5, 3, 2, 1]  # Valores w1, w2, w3, w4, w5
 
     directions = [(1, 0), (0, 1), (1, 1), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
 
@@ -407,6 +329,7 @@ def SituacionDefensa(board,preMove):
     # Si no se encontró ninguna posibilidad de que el oponente gane, devolver False
     return False, []
 
+
 def SituacionAtaque(board,preMove):
     directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
     
@@ -430,12 +353,10 @@ def SituacionAtaque(board,preMove):
                         x += direction[0]
                         y += direction[1]
                     else:
-                        direccion1=1
                         recommended_positions.append((x, y)) 
                         x += direction[0]
                         y += direction[1]
                 else:
-                    direccion1=0
                     break
                 
             x, y = x1 - direction[0], y1 - direction[1]   #Creo que mejor asi :^)
@@ -446,16 +367,14 @@ def SituacionAtaque(board,preMove):
                         x -= direction[0]
                         y -= direction[1]                        
                     else: 
-                        direccion2=1
                         recommended_positions.append((x, y))
                         x -= direction[0]
                         y -= direction[1]
                 else:
-                    direccion2=0
                     break
 
-            if countFichas >= 4:
-                # El oponente tiene al menos 4 fichas en una línea de 6
+            if countFichas >= 4 and len(recommended_positions)>0 :
+                # Tengo menos 4 fichas en una línea de 6
                 # Devolver True y las posiciones recomendadas para bloquear
                 return True, recommended_positions
 

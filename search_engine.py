@@ -26,7 +26,7 @@ class SearchEngine():
           
         Defines.Multiplicador = []
         Defines.flagMulti=0
-        
+
         #------------- Alguien ha ganado ya? -------------
         if self.m_chess_type==Defines.BLACK: #juega negro    
             own_lastPlay = Defines.LVMOVE_N
@@ -34,13 +34,22 @@ class SearchEngine():
         else: #Juega blanca
             own_lastPlay = Defines.LVMOVE_B
             rival_lastPlay = Defines.LVMOVE_N
-          
+        
+            #Check game result
+        if len(own_lastPlay)>2 and (is_win_by_premove(self.m_board, rival_lastPlay)):
+            if (ourColor == self.m_chess_type):
+                #Opponent wins.
+                return 0;
+            else: # Yo creo que esto nunca se da :^|
+                #Self wins.
+                return Defines.MININT + 1;
+    
         #------------- ATAQUE -------------
         if  len(own_lastPlay)>2:
             Jugada = SituacionAtaque(np.array(self.m_board),own_lastPlay) #Puedo ganar ya? ;^P
             if Jugada[0]:
                     Defines.Multiplicador = Jugada[1]
-                    [mejoresMov, alpha]=self.minimax(np.array(self.m_board), 3,Defines.MININT,Defines.MAXINT, True, own_lastPlay,[],3) #3 es el número del ataque. Lo he implementado el ultimo
+                    [mejoresMov, alpha]=self.minimax(np.array(self.m_board), 2,Defines.MININT,Defines.MAXINT, True, own_lastPlay,[],3) #3 es el número del ataque. Lo he implementado el ultimo
                     bestMove.positions[0].x = mejoresMov[0][0]
                     bestMove.positions[0].y = mejoresMov[0][1]
                     bestMove.positions[1].x = mejoresMov[1][0]
@@ -49,17 +58,10 @@ class SearchEngine():
                     return alpha 
         
         #------------- DEFENSA -------------
-        if len(rival_lastPlay)>2 and (is_win_by_premove(self.m_board, rival_lastPlay)):
-            if (ourColor == self.m_chess_type):
-                #Opponent wins.
-                return 0;
-            else:
-                #Self wins.
-                return Defines.MININT + 1;
         if  len(rival_lastPlay)>2:
             Jugada = SituacionDefensa(np.array(self.m_board),rival_lastPlay) #Puede ganarme el rival en el siguiente turno? :^(
             if Jugada[0]:
-                if Jugada[2]==1:
+                if Jugada[2]==1: #Solo tengo que tapar por un lado
                     Defines.Multiplicador = Jugada[1]
                     [mejoresMov, alpha]=self.minimax(np.array(self.m_board), 3,Defines.MININT,Defines.MAXINT, True, own_lastPlay,[],1)
                     bestMove.positions[0].x = mejoresMov[0][0]
@@ -126,8 +128,8 @@ class SearchEngine():
             evaluation_position=posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
             valid_locations=evaluation_position
             if first_call==1: #Si es la primera llamada y es desde defensa 
-                #valid_locations+=Defines.Multiplicador 
-                valid_locations = Defines.Multiplicador + valid_locations
+                valid_locations+=Defines.Multiplicador 
+                #valid_locations = Defines.Multiplicador + valid_locations
                 valid_locations=list(dict.fromkeys(valid_locations))
             elif  first_call==3: #Jugada de ataque
                 valid_locations=Defines.Multiplicador 
@@ -136,7 +138,7 @@ class SearchEngine():
             tamanito=2
             valid_locations_tmp =  posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
             valid_locations= [pos for pos in valid_locations_tmp if pos in evaluation_position]
-            # print_board_2(board, valid_locations)     
+            #print_board_2(board, valid_locations)     
            
             
         is_terminal =  is_win_by_premove(board, positions)
@@ -144,7 +146,6 @@ class SearchEngine():
         if depth == 0 or is_terminal:
             if is_terminal:
                 if maximizingPlayer:
-                    #print_board(board)
                     return (None,Defines.MININT) 
                 else:
                     #print_board(board)
@@ -184,7 +185,7 @@ class SearchEngine():
                     puntuacion_positiva=new_score[1]
                     
                     if Defines.flagMulti==1:
-                        puntuacion_positiva+=1500#Defines.MAXINT
+                        puntuacion_positiva+=15000#Defines.MAXINT
                             
                     if puntuacion_positiva> value:
                         value = puntuacion_positiva
@@ -200,6 +201,7 @@ class SearchEngine():
                 if alpha >= beta:
                   break
             return best_move, value
+        
         else:  # Minimizing player
             value = Defines.MAXINT
             best_move = None
@@ -228,8 +230,7 @@ class SearchEngine():
                 if alpha <= beta:
                     break
             return best_move, value
-
-
+    
 def flush_output():
     import sys
     sys.stdout.flush()

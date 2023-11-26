@@ -8,13 +8,13 @@ class Defines:
     MSG_LENGTH=512 #Tamaño del mensaje
     GRID_NUM=21 #Number of the board, 19*19 plus edges.
     GRID_COUNT=361 #Sum of the points in the board.
-    LOG_FILE="Arbeloa-engine.log"
-    ENGINE_NAME="Arbeloa.Connect6"
+    LOG_FILE="Arbeloa-sbfremvengine.log"
+    ENGINE_NAME="sbfrmv"
     # Max values in the evaluation.
     MAXINT=20000
     MININT=-20000
-    TAMANO = 3       #Tamaño de la ventana cuadrada de evaluacion para posicionar la ficha
-    DEPTH = 3       #Profundidad de busqueda
+    TAMANO = 2       #Tamaño de la ventana cuadrada de evaluacion para posicionar la ficha
+    DEPTH = 4       #Profundidad de busqueda
     LVMOVE_N = []        #Last Valid Move Negro, almacena el ultimo movimiento valido
     LVMOVE_B = []        #Last Valid Move Blanco, almacena el ultimo movimiento valido 
     Multiplicador=[] #Multiplicador de la ventana de evaluacion si evita que gane el rival
