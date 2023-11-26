@@ -198,7 +198,7 @@ def posiciones_disponibles_con_duplicados(matriz, tamano, posicion1, posicion2):
     disponibles2 = get_valid_locations(matriz, tamano, posicion2)
     
     # Combina las dos listas sin eliminar duplicados
-    # disponibles_combinados=[item for pair in zip(disponibles1, disponibles2) for item in pair] # Intercalados
+    #disponibles_combinados=[item for pair in zip(disponibles1, disponibles2) for item in pair] # Intercalados
     disponibles_combinados = disponibles1 + disponibles2 # Uno detras del otro 
     
     return disponibles_combinados

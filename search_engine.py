@@ -44,7 +44,7 @@ class SearchEngine():
                 #Self wins.
                 return Defines.MININT + 1;
     
-        #------------- ATAQUE -------------
+        #------------- ATAQUE ------------- Puedo Ganar?
         if  len(own_lastPlay)>2:
             Jugada = SituacionAtaque(np.array(self.m_board),own_lastPlay) #Puedo ganar ya? ;^P
             if Jugada[0]:
@@ -108,7 +108,7 @@ class SearchEngine():
                 
             #------------- NI DEFENSA NI ATAQUE. A JUGAR!! -------------    
             if Defines.ContadorTurnos <5: #Primeros turnos minimaxprofundidad 2
-                [mejoresMov, alpha]=self.minimax(np.array(self.m_board),self.m_alphabeta_depth-2,Defines.MININT,Defines.MAXINT,True,own_lastPlay,[],2)
+                [mejoresMov, alpha]=self.minimax(np.array(self.m_board),self.m_alphabeta_depth-1,Defines.MININT,Defines.MAXINT,True,own_lastPlay,[],2)
                 bestMove.positions[0].x = mejoresMov[0][0]
                 bestMove.positions[0].y = mejoresMov[0][1]
                 bestMove.positions[1].x = mejoresMov[1][0]

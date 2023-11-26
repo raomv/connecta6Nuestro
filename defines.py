@@ -14,7 +14,7 @@ class Defines:
     MAXINT=20000
     MININT=-20000
     TAMANO = 4       #Tamaño de la ventana cuadrada de evaluacion para posicionar la ficha
-    DEPTH = 3       #Profundidad de busqueda
+    DEPTH = 4       #Profundidad de busqueda
     LVMOVE_N = []        #Last Valid Move Negro, almacena el ultimo movimiento valido
     LVMOVE_B = []        #Last Valid Move Blanco, almacena el ultimo movimiento valido 
     Multiplicador=[] #Multiplicador de la ventana de evaluacion si evita que gane el rival
