@@ -3,10 +3,6 @@ import re
 from defines import *
 import time
 import numpy as np 
-#import matplotlib.pyplot as plt
-#import matplotlib.colors as mcolors
-# import matplotlib
-# matplotlib.use("Agg")
 
 
 
@@ -39,7 +35,7 @@ def unmake_move(board, move):
 
 def is_win_by_premove(board, preMove):
     directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
-    board = np.array(board)  # Convierte la matriz a un array de NumPy
+    board = np.array(board)  
     for direction in directions:
         for i in range(2):
             count = 0
@@ -109,26 +105,6 @@ def msg2move(msg):
         move.positions[1].y = ord(msg[2]) - ord('A') + 1
         move.score = 0
         return move
-
-'''
-def print_board(board, preMove=None):
-    print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
-    for i in range(1, Defines.GRID_NUM - 1):  #Esto crea un vector desde 1 hasta (21-1)-1
-        print(f"{chr(ord('A') - 1 + i)}", end=" ")
-        for j in range(1, Defines.GRID_NUM - 1):
-            x = Defines.GRID_NUM - 1 - j
-            y = i
-            stone = board[x][y]
-            if stone == Defines.NOSTONE:
-                print(" -", end="")
-            elif stone == Defines.BLACK:
-                print(" O", end="")
-            elif stone == Defines.WHITE:
-                print(" *", end="")
-        print(" ", end="")        
-        print(f"{chr(ord('A') - 1 + i)}", end="\n")
-    print("   " + "".join([chr(i + ord('A') - 1)+" " for i in range(1, Defines.GRID_NUM - 1)]))
-    '''
     
 
 def print_board(board, preMove=None):
@@ -166,12 +142,13 @@ def print_score(move_list, n):
                 print(f"{score:4}", end="")
         print()
 
-
-def get_valid_locations(matriz, tamano, posicion):
+#Manera alternativa de ordenar las casillas que vamos a evaluar. Se deja por si se quisiera cambiar y seguir probando.
+def get_valid_locations_2(matriz, tamano, posicion):
     directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
     posiciones_disponibles=[]
-    # matriz ya es numpy    
+    #for direction in directions:
     for multi in range(2):
+        #for multi in range(2):
         for direction in directions:
             x1, y1 = posicion[0], posicion[1]
             movStone = matriz[x1, y1]
@@ -185,9 +162,26 @@ def get_valid_locations(matriz, tamano, posicion):
 
     return posiciones_disponibles
 
+def get_valid_locations(matriz, tamano, posicion):
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+    posiciones_disponibles = []
+    for direction in directions:
+        for multi in [1,-1]:
+            x1, y1 = posicion[0], posicion[1]
+            movStone = matriz[x1, y1]
+
+            x, y = x1 + direction[0] * (multi * 1), y1 + direction[1] * (multi * 1)
+            if 0 <= x < matriz.shape[0] and 0 <= y < matriz.shape[1] and matriz[x, y] == Defines.NOSTONE:
+                posiciones_disponibles.append((x, y))
+
+            x, y = x1 + direction[0] * (2*multi), y1 + direction[1] * (multi * 2)
+            if 0 <= x < matriz.shape[0] and 0 <= y < matriz.shape[1] and matriz[x, y] == Defines.NOSTONE:
+                posiciones_disponibles.append((x, y))
+
+    return posiciones_disponibles
 
 def posiciones_disponibles_sin_repetidos(matriz, tamano, posicion1, posicion2):
-    # matriz ya es numpy
+
     # Obtiene las posiciones disponibles con duplicados
     disponibles_con_duplicados = posiciones_disponibles_con_duplicados(matriz, tamano, posicion1, posicion2)
     
@@ -197,15 +191,15 @@ def posiciones_disponibles_sin_repetidos(matriz, tamano, posicion1, posicion2):
     return disponibles_sin_repetidos
 
 def posiciones_disponibles_con_duplicados(matriz, tamano, posicion1, posicion2):
-    # Llama a la funci�n posiciones_disponibles con la primera posici�n central
+    # Llama a la funcion posiciones_disponibles con la primera posici�n central
     disponibles1 = get_valid_locations(matriz, tamano, posicion1)
     
-    # Llama a la funci�n posiciones_disponibles con la segunda posici�n central
+    # Llama a la funcion posiciones_disponibles con la segunda posici�n central
     disponibles2 = get_valid_locations(matriz, tamano, posicion2)
     
     # Combina las dos listas sin eliminar duplicados
-    disponibles_combinados=[item for pair in zip(disponibles1, disponibles2) for item in pair] # Intercalados
-    # disponibles_combinados = disponibles1 + disponibles2 # Uno detras del otro 
+    # disponibles_combinados=[item for pair in zip(disponibles1, disponibles2) for item in pair] # Intercalados
+    disponibles_combinados = disponibles1 + disponibles2 # Uno detras del otro 
     
     return disponibles_combinados
 
@@ -220,7 +214,7 @@ def print_board_2(board, casillas):
             y = i
             stone = board[x][y]
             if (x, y) in casillas:
-                # Busca la posici�n en casillas y obt�n su �ndice para imprimir el n�mero
+                # Busca la posicion en casillas y obt�n su �ndice para imprimir el n�mero
                 # num = casillas.index((x, y)) + 1
                 hh=casillas.index((x,y))
                 if hh<10:
@@ -243,34 +237,32 @@ def print_board_2(board, casillas):
 def make_move_2(board, move, color):
     board[move[0]][move[1]] = color
     
-
-#Prueba de la evaluacion del paper del felixiano.. 
+ 
 def hmove_evaluation(board, player, row, col):
     E = 0
-    epsilon = 0.1  # Valor epsilon
-    weights = [8, 6, 5, 3, 2, 1]  # Valores w1, w2, w3, w4, w5
+    epsilon = 0.5  # Valor epsilon
+    weights = [8, 6, 5, 3, 2, 0]  # Valores w1, w2, w3, w4, w5
 
-    directions = [(1, 0), (0, 1), (1, 1), (1, -1), (0, -1), (-1, -1), (-1, 0), (-1, 1)]
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
 
     for direction in directions:
         Edirectional = 1
-        for half in range(2):
-            for k in range(1, 6):
-                r = row + direction[0] * k
-                c = col + direction[1] * k
+        for k in range(1, 6):
+            r = row + direction[0] * k
+            c = col + direction[1] * k
 
-                if not (0 <= r < len(board) and 0 <= c < len(board[0])):
-                    break
+            if not (0 <= r < len(board) and 0 <= c < len(board[0])):
+                break
 
-                if board[r][c] == 3 - player:  # Oponente's stone or border
-                    Edirectional = 0
-                    break
-                elif board[r][c] == 0:  # Empty point
-                    Edirectional += epsilon
-                elif board[r][c] == player:  # Own stone
-                    Edirectional *= weights[k]
+            if board[r][c] == 3 - player:  # Oponente's stone or border
+                Edirectional += 0
+                break
+            elif board[r][c] == 0:  # Empty point
+                Edirectional += epsilon
+            elif board[r][c] == player:  # Own stone
+                Edirectional *= weights[k]
 
-            E += Edirectional
+        E += Edirectional
 
     return E
 
@@ -286,7 +278,6 @@ def undo_move(board, pos):
 #Como está la situacion en defesa
 def SituacionDefensa(board,preMove):
     directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
-
     for direction in directions:
         direccion1=0
         direccion2=0
@@ -294,7 +285,7 @@ def SituacionDefensa(board,preMove):
             x1, y1 = preMove[i * 2], preMove[i * 2 + 1]
             movStone = board[x1, y1]
 
-            if movStone == Defines.BORDER or movStone == Defines.NOSTONE: # No deberia entrar nunca.. Me baso en las ultimas jugadas..
+            if movStone == Defines.BORDER or movStone == Defines.NOSTONE: 
                 continue
 
             countFichas = 0  # Contador de fichas consecutivas
@@ -319,7 +310,7 @@ def SituacionDefensa(board,preMove):
                     direccion1=0
                     break
                 
-            x, y = x1 - direction[0], y1 - direction[1]   #Creo que mejor asi :^)
+            x, y = x1 - direction[0], y1 - direction[1]   
             for jj in range(5):
                 if 0 <= x < board.shape[0] and 0 <= y < board.shape[1] and (board[x, y] == movStone or board[x, y] == Defines.NOSTONE) :
                     if board[x, y] == movStone:
@@ -359,7 +350,7 @@ def SituacionAtaque(board,preMove):
             x1, y1 = preMove[i * 2], preMove[i * 2 + 1]
             movStone = board[x1, y1]
 
-            if movStone == Defines.BORDER or movStone == Defines.NOSTONE: # No deberia entrar nunca.. Me baso en las ultimas jugadas..
+            if movStone == Defines.BORDER or movStone == Defines.NOSTONE: 
                 continue
 
             countFichas = 0  # Contador de fichas consecutivas
@@ -380,7 +371,7 @@ def SituacionAtaque(board,preMove):
                 else:
                     break
                 
-            x, y = x1 - direction[0], y1 - direction[1]   #Creo que mejor asi :^)
+            x, y = x1 - direction[0], y1 - direction[1]  
             for jj in range(5):
                 if 0 <= x < board.shape[0] and 0 <= y < board.shape[1] and (board[x, y] == movStone or board[x, y] == Defines.NOSTONE) :
                     if board[x, y] == movStone:
@@ -402,3 +393,42 @@ def SituacionAtaque(board,preMove):
     # Si no se encontró ninguna posibilidad de que el oponente gane, devolver False
     return False, []
 
+
+#Busqueda de amenazas (3 en raya mio) para buscar dos amenazas disponibles y colocar ahi las fichas
+def buscar_amenaza(board, chess_type,amenaza_actual):
+    directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+
+    for i in range(len(board)):
+        for j in range(len(board[i])):
+            if board[i][j] == chess_type:
+                for direction in directions:
+                    amenaza = validar_amenaza(board, i, j, chess_type, direction)
+                    if amenaza and amenaza!=amenaza_actual:
+                        return amenaza
+
+    return None
+
+def validar_amenaza(board, row, col, chess_type, direction):
+    count = 1
+    amenaza = []
+
+    for k in range(1, 6):
+        r = row + direction[0] * k
+        c = col + direction[1] * k
+
+        if not (0 <= r < len(board) and 0 <= c < len(board[0])):
+            break
+
+        if board[r][c] == chess_type:
+            count += 1
+            amenaza.append((r, c))
+        elif board[r][c] == 0:
+            amenaza.append((r, c))
+        else:
+            count = 1
+            amenaza = []
+
+    if count >= 3 and len(amenaza) >= 3:
+        return amenaza, direction
+    else:
+        return None

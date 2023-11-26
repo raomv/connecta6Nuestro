@@ -49,7 +49,7 @@ class SearchEngine():
             Jugada = SituacionAtaque(np.array(self.m_board),own_lastPlay) #Puedo ganar ya? ;^P
             if Jugada[0]:
                     Defines.Multiplicador = Jugada[1]
-                    [mejoresMov, alpha]=self.minimax(np.array(self.m_board), 2,Defines.MININT,Defines.MAXINT, True, own_lastPlay,[],3) #3 es el número del ataque. Lo he implementado el ultimo
+                    [mejoresMov, alpha]=self.minimax(np.array(self.m_board), 1,Defines.MININT,Defines.MAXINT, True, own_lastPlay,[],3) #3 es el número del ataque. Lo he implementado el ultimo
                     bestMove.positions[0].x = mejoresMov[0][0]
                     bestMove.positions[0].y = mejoresMov[0][1]
                     bestMove.positions[1].x = mejoresMov[1][0]
@@ -63,7 +63,7 @@ class SearchEngine():
             if Jugada[0]:
                 if Jugada[2]==1: #Solo tengo que tapar por un lado
                     Defines.Multiplicador = Jugada[1]
-                    [mejoresMov, alpha]=self.minimax(np.array(self.m_board), 3,Defines.MININT,Defines.MAXINT, True, own_lastPlay,[],1)
+                    [mejoresMov, alpha]=self.minimax(np.array(self.m_board),self.m_alphabeta_depth,Defines.MININT,Defines.MAXINT, True, own_lastPlay,[],1)
                     bestMove.positions[0].x = mejoresMov[0][0]
                     bestMove.positions[0].y = mejoresMov[0][1]
                     bestMove.positions[1].x = mejoresMov[1][0]
@@ -79,31 +79,48 @@ class SearchEngine():
         
         #------------- Primer movimiento -------------
         alpha = 0
-        if(Defines.ContadorTurnos):
+        if(Defines.ContadorTurnos==0):
             bestMove.positions[0].x = 10
             bestMove.positions[0].y = 10
             bestMove.positions[1].x = 10
             bestMove.positions[1].y = 10
 
-        #------------- NI DEFENSA NI ATAQUE. A JUGAR!! -------------
-        else:   
-            # self,board, depth, alpha, beta, maximizingPlayer, position1, position2)
+        else:
             if Defines.ContadorTurnos == 1: #Primeros turnos minimaxprofundidad 1
                 bestMove.positions[0].x = 9
-                bestMove.positions[0].y = 9
-                bestMove.positions[1].x = 9
+                bestMove.positions[0].y = 10
+                bestMove.positions[1].x = 10
                 bestMove.positions[1].y = 11
                 return alpha
-            elif Defines.ContadorTurnos < 4: #Primeros turnos minimaxprofundidad 2
-                [mejoresMov, alpha]=self.minimax(np.array(self.m_board),2,Defines.MININT,Defines.MAXINT,True,own_lastPlay,[],2)
-            else:
-                [mejoresMov, alpha]=self.minimax(np.array(self.m_board),Defines.DEPTH,Defines.MININT,Defines.MAXINT,True,own_lastPlay,[],2)
+                       
+            #------------- DOBLE AMENAZA? -------------
+            amenaza_actual = []
+            amenaza1 = buscar_amenaza(np.array(self.m_board), self.m_chess_type,amenaza_actual)
+            if amenaza1:
+                amenaza2 = buscar_amenaza(np.array(self.m_board), self.m_chess_type,amenaza1)
+                if amenaza2:
+                    piedra_amenaza1 = next((pos for pos in amenaza1[0] if self.m_board[pos[0]][pos[1]] == Defines.NOSTONE), None)
+                    piedra_amenaza2 = next((pos for pos in amenaza2[0] if self.m_board[pos[0]][pos[1]] == Defines.NOSTONE), None)
+                    # Asignar las piedras a bestMove
+                    bestMove.positions[0].x, bestMove.positions[0].y = piedra_amenaza1
+                    bestMove.positions[1].x, bestMove.positions[1].y = piedra_amenaza2
+                    return alpha
+                
+            #------------- NI DEFENSA NI ATAQUE. A JUGAR!! -------------    
+            if Defines.ContadorTurnos <5: #Primeros turnos minimaxprofundidad 2
+                [mejoresMov, alpha]=self.minimax(np.array(self.m_board),self.m_alphabeta_depth-2,Defines.MININT,Defines.MAXINT,True,own_lastPlay,[],2)
+                bestMove.positions[0].x = mejoresMov[0][0]
+                bestMove.positions[0].y = mejoresMov[0][1]
+                bestMove.positions[1].x = mejoresMov[1][0]
+                bestMove.positions[1].y = mejoresMov[1][1]
+            else: #
+                [mejoresMov, alpha]=self.minimax(np.array(self.m_board),self.m_alphabeta_depth,Defines.MININT,Defines.MAXINT,True,own_lastPlay,[],2)
+                bestMove.positions[0].x = mejoresMov[0][0]
+                bestMove.positions[0].y = mejoresMov[0][1]
+                bestMove.positions[1].x = mejoresMov[1][0]
+                bestMove.positions[1].y = mejoresMov[1][1]
             
-            bestMove.positions[0].x = mejoresMov[0][0]
-            bestMove.positions[0].y = mejoresMov[0][1]
-            bestMove.positions[1].x = mejoresMov[1][0]
-            bestMove.positions[1].y = mejoresMov[1][1]
-
+          
         return alpha
         
     def check_first_move(self):  #Recorre todas las posiciones y devuelve false si esta vacio
@@ -121,6 +138,7 @@ class SearchEngine():
         return (-1,-1)
 
 
+# --------------------- MINIMAX!! ---------------------
     def minimax(self,board, depth, alpha, beta, maximizingPlayer, positions,evaluation_position,first_call):
 
         if first_call!=0:
@@ -137,9 +155,9 @@ class SearchEngine():
         else:
             tamanito=2
             valid_locations_tmp =  posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:])
-            valid_locations= [pos for pos in valid_locations_tmp if pos in evaluation_position]
+            #valid_locations =  posiciones_disponibles_sin_repetidos(board,tamanito,positions[:2],positions[2:]) #Posiciones disponibles sin repetir
+            valid_locations= [pos for pos in valid_locations_tmp if pos in evaluation_position] #Solo me quedo con las posiciones que estan en la ventana de evaluacion inicial
             #print_board_2(board, valid_locations)     
-           
             
         is_terminal =  is_win_by_premove(board, positions)
 
@@ -148,9 +166,8 @@ class SearchEngine():
                 if maximizingPlayer:
                     return (None,Defines.MININT) 
                 else:
-                    #print_board(board)
                     return (None,Defines.MAXINT)
-                # else: # Game is over, no more valid moves
+                #else: # Game is over, no more valid moves
                 #     return (None, 0)
             else: # Depth is
                 if maximizingPlayer:
@@ -185,7 +202,7 @@ class SearchEngine():
                     puntuacion_positiva=new_score[1]
                     
                     if Defines.flagMulti==1:
-                        puntuacion_positiva+=15000#Defines.MAXINT
+                        puntuacion_positiva+=15000
                             
                     if puntuacion_positiva> value:
                         value = puntuacion_positiva

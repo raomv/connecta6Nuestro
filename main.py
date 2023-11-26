@@ -3,10 +3,8 @@ import sys
 
 
 def main():
-    gameEngine = GameEngine("Arbeloa")
+    gameEngine = GameEngine('Arbeloa')
     gameEngine.run()
 
 if __name__ == "__main__":
     main()
-
-   

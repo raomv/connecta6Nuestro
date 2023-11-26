@@ -12,7 +12,7 @@ class GameEngine:
                 self.m_engine_name = name
             else:
                 print(f"Too long Engine Name: {name}, should be less than: {Defines.MSG_LENGTH}")
-        self.m_alphabeta_depth = 6
+        self.m_alphabeta_depth = Defines.DEPTH  #Se inicializa siempre a 4, si se desea se puede cambiar durante el juego
         self.m_board = t = [ [0]*Defines.GRID_NUM for i in range(Defines.GRID_NUM)]
         self.init_game()
         self.m_search_engine = SearchEngine()
@@ -51,7 +51,6 @@ class GameEngine:
             elif msg == "exit" or msg == "quit":
                 break
             elif msg == "print":
-                #show_m_board(self.m_board)
                 print_board(self.m_board, self.m_best_move)
             elif msg == "vcf":
                 self.m_vcf = True
@@ -59,54 +58,43 @@ class GameEngine:
                 self.m_vcf = False
             elif msg.startswith("black"):
                 self.m_best_move = msg2move(msg[6:])
-                make_move(self.m_board, self.m_best_move, Defines.BLACK)
                 self.m_chess_type = Defines.BLACK
+                make_move(self.m_board, self.m_best_move, self.m_chess_type)
             elif msg.startswith("white"):
                 self.m_best_move = msg2move(msg[6:])
-                make_move(self.m_board, self.m_best_move, Defines.WHITE)
                 self.m_chess_type = Defines.WHITE
+                make_move(self.m_board, self.m_best_move, self.m_chess_type)
             elif msg == "next":
                 self.m_chess_type = self.m_chess_type ^ 3
                 if self.search_a_move(self.m_chess_type, self.m_best_move):
                     make_move(self.m_board, self.m_best_move, self.m_chess_type)
-                    msg = f"move {move2msg(self.m_best_move)} "#+f" color: {self.m_chess_type}" 
+                    msg = f"move {move2msg(self.m_best_move)} "
                     print(msg)
                     flush_output()
             elif msg.startswith("new"):
                 self.init_game()
-                if msg[4:] == "white":
-                    self.m_best_move = msg2move("JJ")
-                    make_move(self.m_board, self.m_best_move, Defines.WHITE)
-                    self.m_chess_type = Defines.WHITE
-                    msg = "move JJ"
-                    print(msg)
-                    flush_output()
-                else:
+                if msg[4:] == "black":
                     self.m_best_move = msg2move("JJ")
                     make_move(self.m_board, self.m_best_move, Defines.BLACK)
                     self.m_chess_type = Defines.BLACK
                     msg = "move JJ"
                     print(msg)
                     flush_output()
+                else:
+                    self.m_chess_type = Defines.WHITE
+                        
+              
             elif msg.startswith("move"):
-                self.m_chess_type = self.m_chess_type ^ 3
-                self.m_best_move = msg2move(msg[5:])
-                make_move(self.m_board, self.m_best_move, self.m_chess_type)
-                if self.m_chess_type==Defines.BLACK: #juega negro   
-                    own_lastPlay = Defines.LVMOVE_N
-                    rival_lastPlay = Defines.LVMOVE_B
-                else: #Juega blanca
-                    own_lastPlay = Defines.LVMOVE_B
-                    rival_lastPlay = Defines.LVMOVE_N
-                if is_win_by_premove(self.m_board,rival_lastPlay):
-                    print("We lost!")
-                    print_board(self.m_board)
-                    break
-                if self.search_a_move(self.m_chess_type, self.m_best_move):
-                    msg = f"move {move2msg(self.m_best_move)}"
-                    make_move(self.m_board, self.m_best_move, self.m_chess_type)
-                    print(msg)
-                    flush_output()
+               self.m_chess_type = self.m_chess_type ^ 3
+               self.m_best_move = msg2move(msg[5:])
+               make_move(self.m_board, self.m_best_move, self.m_chess_type)
+               if is_win_by_premove(self.m_board, self.m_best_move):
+                   print("We lost!")
+               if self.search_a_move(self.m_chess_type, self.m_best_move):
+                   msg = f"move {move2msg(self.m_best_move)}"
+                   make_move(self.m_board, self.m_best_move, self.m_chess_type)
+                   print(msg)
+                   flush_output()   
             elif msg.startswith("depth"):
                 d = int(msg[6:])
                 if 0 < d < 10:
@@ -129,7 +117,7 @@ class GameEngine:
         print(f"AB Time:\t{end - start:.3f}")
         print(f"Node:\t{self.m_search_engine.m_total_nodes}\n")
         print(f"Score:\t{score:.3f}")
-        print(f"Turno:\t{Defines.ContadorTurnos+1:.0f}")
+        #print(f"Turno:\t{Defines.ContadorTurnos+1:.0f}")
         return True
 
 def flush_output():
